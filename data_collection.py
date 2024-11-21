@@ -143,6 +143,7 @@ def continuous_scanning():
     while True:
         work_order = input()
         employee_id = input()
+
         assembly_id = input()
 
 
