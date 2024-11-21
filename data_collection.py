@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import simpledialog
 import keyboard
 import sys
+import json
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit, QVBoxLayout, QWidget, \
     QInputDialog
 import pandas as pd
@@ -130,6 +132,22 @@ def logRevision(workOrder, assembly, cell, numOfPPL, employeeIDs, start, end):
             worksheet.column_dimensions[column_letter].width = fixed_width
 
 
+def continuous_scanning():
+    # year = time.localtime().tm_year
+    # month = time.localtime().tm_mon
+    # day = time.localtime().tm_mday
+    print("Starting the program, please wait. :)")
+    log = pd.read_excel("WorkLog.xlsx", sheet_name="Sheet1")
+    print("Please start scanning now.")
+
+    while True:
+        work_order = input()
+        employee_id = input()
+        assembly_id = input()
+
+
+
+
 def main():
     print("Please make sure the WorkLog Excel is close during ANYTIME of scanning")
     workOrder = scanWorkOrder()
@@ -152,8 +170,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # app = QApplication(sys.argv)
-    # main_window = BasicApp()
-    # main_window.show()  # 显示窗口
-    # sys.exit(app.exec_())
-    main()
+    #main()
+    continuous_scanning()
