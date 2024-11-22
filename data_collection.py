@@ -137,21 +137,20 @@ def continuous_scanning():
     year = time.localtime().tm_year
     month = time.localtime().tm_mon
     day = time.localtime().tm_mday
-
+    log = []
     print("Starting the program, please wait. :)")
-    log = pd.read_excel("WorkLog.xlsx", sheet_name="Sheet1")
-    log_array = np.array(log)
-    new_row = np.array([0,0,0,0,0,0,0,0,0,0])
-    log_array = np.vstack([log_array,new_row])
-    df_modified = pd.DataFrame(log_array, columns=log.columns, index=pd.RangeIndex(start=0,stop=log_array.shape[0],step=1))
-    print("Please start scanning now.")
-    temp = []
-    while True:
-        work_id = input()
-        employee_id = input()
-        assembly_id = input()
 
-        print(position)
+    print("Please start scanning now.")
+    while True:
+        info = input()
+        if "End of the day." in info:
+            break
+        info_time = time.localtime()
+        info_pack = [info, f"{info_time.tm_hour}:{info_time.tm_min}"]
+        log += info_pack
+
+    log = np.array(log)
+    np.savetxt(f"log_{year}{month}{day}.txt", X=log,fmt="%s")
 
 
 
