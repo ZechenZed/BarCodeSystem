@@ -133,18 +133,25 @@ def logRevision(workOrder, assembly, cell, numOfPPL, employeeIDs, start, end):
 
 
 def continuous_scanning():
-    # year = time.localtime().tm_year
-    # month = time.localtime().tm_mon
-    # day = time.localtime().tm_mday
+    # Time
+    year = time.localtime().tm_year
+    month = time.localtime().tm_mon
+    day = time.localtime().tm_mday
+
     print("Starting the program, please wait. :)")
     log = pd.read_excel("WorkLog.xlsx", sheet_name="Sheet1")
+    log_array = np.array(log)
+    new_row = np.array([0,0,0,0,0,0,0,0,0,0])
+    log_array = np.vstack([log_array,new_row])
+    df_modified = pd.DataFrame(log_array, columns=log.columns, index=pd.RangeIndex(start=0,stop=log_array.shape[0],step=1))
     print("Please start scanning now.")
-
+    temp = []
     while True:
-        work_order = input()
+        work_id = input()
         employee_id = input()
-
         assembly_id = input()
+
+        print(position)
 
 
 
