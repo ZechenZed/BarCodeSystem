@@ -138,21 +138,21 @@ def continuous_scanning():
     month = time.localtime().tm_mon
     day = time.localtime().tm_mday
     log = []
-    print("Starting the program, please wait. :)")
 
     print("Please start scanning now.")
     while True:
         info = input()
         if "End of the day." in info:
+            print("Enjoy the rest of the day!")
             break
-        info_time = time.localtime()
-        info_pack = [info, f"{info_time.tm_hour}:{info_time.tm_min}"]
-        log += info_pack
+        elif "Report" in info:
+            logRevision()
+        else:
+            info_time = time.localtime()
+            info_pack = [info, info_time]
+            log += [info_pack]
 
-    log = np.array(log)
-    np.savetxt(f"log_{year}{month}{day}.txt", X=log,fmt="%s")
-
-
+    read_data = {}
 
 
 def main():
@@ -178,4 +178,34 @@ def main():
 
 if __name__ == '__main__':
     #main()
-    continuous_scanning()
+    # continuous_scanning()
+    log = ["ID11111", "ID112345"]
+    error_count = 0
+
+    i = 0
+    while i < len(log):
+        print(i)
+        if len(log[i]) != 7:
+            log.insert(i + error_count, "-")
+            error_count += 1
+            print("error case 1")
+        try:
+            if len(log[i + 1]) != 8:
+                log.insert(i + 1 + error_count, "-")
+                error_count += 1
+                print("error case 2")
+        except:
+            log.insert(-1,"-")
+
+        try:
+            if len(log[i + 2]) != 14:
+                log.insert(i + 2 + error_count, "-")
+                error_count += 1
+                print("error case 3")
+        except:
+            log.insert(-1,"-")
+
+        i += 3
+        print(len(log))
+
+    print(error_count, log)
