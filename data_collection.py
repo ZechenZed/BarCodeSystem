@@ -176,36 +176,33 @@ def main():
             break
 
 
+def normalize_list_by_length_final(input_list, default_value='X'):
+    # 定义长度与类别的映射
+    length_to_category = {7: 'A', 8: 'B', 14: 'C'}
+    target_frame = ['A', 'B', 'C']  # 目标框架
+    normalized_list = []
+    temp_frame = {key: default_value for key in target_frame}  # 初始化临时框架
+
+    for item in input_list:
+        # 根据长度判断类别
+        category = length_to_category.get(len(item))
+        if category and temp_frame[category] == default_value:
+            temp_frame[category] = item
+        # 当收集到完整的 [A, B, C] 组合时，将其追加到结果中
+        if all(temp_frame[key] != default_value for key in target_frame):
+            normalized_list.extend(temp_frame.values())
+            temp_frame = {key: default_value for key in target_frame}  # 重置框架
+
+    # 处理未完成的部分（无论是否完整）
+    normalized_list.extend(temp_frame.values())
+
+    return normalized_list
+
+
 if __name__ == '__main__':
     #main()
     # continuous_scanning()
-    log = ["ID11111", "ID112345"]
-    error_count = 0
-
-    i = 0
-    while i < len(log):
-        print(i)
-        if len(log[i]) != 7:
-            log.insert(i + error_count, "-")
-            error_count += 1
-            print("error case 1")
-        try:
-            if len(log[i + 1]) != 8:
-                log.insert(i + 1 + error_count, "-")
-                error_count += 1
-                print("error case 2")
-        except:
-            log.insert(-1,"-")
-
-        try:
-            if len(log[i + 2]) != 14:
-                log.insert(i + 2 + error_count, "-")
-                error_count += 1
-                print("error case 3")
-        except:
-            log.insert(-1,"-")
-
-        i += 3
-        print(len(log))
-
-    print(error_count, log)
+    input = ["ID111211", "ID112345", "ID19823", "ID192837", 'ID112381298371']
+    default_value = '-'
+    result = normalize_list_by_length_final(input, default_value)
+    print(result)
