@@ -10,6 +10,8 @@ import pandas as pd
 import pprint
 import json
 
+from pandas.core.window.doc import template_see_also
+
 year = time.localtime().tm_year
 month = time.localtime().tm_mon
 day = time.localtime().tm_mday
@@ -170,10 +172,10 @@ def main():
                             elif template[row, 13] == temp_date_end:
                                 if template[row, 14] < temp_time_end:
                                     template[row, 14] = temp_time_end
-
-                        template[row, 16] = int(template[row, 16] * template[row, 10] + cost_min_tt) / (
-                                    template[row, 10] + 1)
-                        template[row, 10] += 1
+                        print(type(template[row,16][0]), template[row,16],type(template[row,16][0]))
+                        template[row, 16] = (int(int(template[row, 16]) * int(template[row, 10]) + cost_min_tt) /
+                                             (int(template[row, 10]) + 1))
+                        template[row, 10] = int(template[row,10]) + 1
 
                     # Does not have the record before.
                     else:
@@ -202,6 +204,9 @@ def main():
                             elif template[row, 11] == temp_date_start:
                                 if template[row, 12] > temp_time_start:
                                     template[row, 12] = temp_time_start
+                            elif template[row,11] == "0.0":
+                                template[row, 11] = temp_date_start
+                                template[row, 12] = temp_time_start
 
                             # Compare to see if the end time is the latest start time.
                             if template[row, 13] < temp_date_end:
@@ -210,6 +215,9 @@ def main():
                             elif template[row, 13] == temp_date_end:
                                 if template[row, 14] < temp_time_end:
                                     template[row, 14] = temp_time_end
+                            elif template[row,13] == "0.0":
+                                template[row, 13] = temp_date_end
+                                template[row, 14] = temp_time_end
 
                         template[row, 16] = cost_min_tt
 
