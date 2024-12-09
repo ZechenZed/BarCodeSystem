@@ -9,7 +9,9 @@ from collections import defaultdict
 import pandas as pd
 import pprint
 import json
+from openpyxl import load_workbook
 
+# Define some of the global variables
 year = time.localtime().tm_year
 month = time.localtime().tm_mon
 day = time.localtime().tm_mday
@@ -106,6 +108,56 @@ def list_to_dic(input_list):
     return log_dict
 
 
+def detect_missing_data(current_values):
+    # Detect part of the error cases
+    start_end_error = False if len(current_values) % 2 == 0 else True
+    for i in range(len(current_values)):
+        if i % 2 == 0:
+            if current_values[i][0] != "STA":
+                start_end_error = True
+                break
+        else:
+            if current_values[i][0] != "END":
+                start_end_error = True
+                break
+    return start_end_error
+
+
+def update_time(template, row, temp_date_start, temp_time_start, temp_date_end, temp_time_end):
+    # Compare to see if the start time is the earliest start time.
+    if template[row][11] == 0:
+        template[row][11] = temp_date_start
+        template[row][12] = temp_time_start
+    if template[row][11] > temp_date_start:
+        template[row][11] = temp_date_start
+        template[row][12] = temp_time_start
+    elif template[row][11] == temp_date_start:
+        if template[row][12] > temp_time_start:
+            template[row][12] = temp_time_start
+
+    # Compare to see if the end time is the latest start time.
+    if template[row][13] == 0:
+        template[row][13] = temp_date_start
+        template[row][14] = temp_time_start
+    if template[row][13] < temp_date_end:
+        template[row][13] = temp_date_end
+        template[row][14] = temp_time_end
+    elif template[row][13] == temp_date_end:
+        if template[row][14] < temp_time_end:
+            template[row][14] = temp_time_end
+    return template
+
+
+def duration_time(template, row):
+    sta_hour_ind = 1 if template[row][12] % 2 == 0 else 2
+    end_hour_ind = 1 if template[row][14] % 2 == 0 else 2
+
+    template[row][15] = time_correct(template[row][12][0:sta_hour_ind],
+                                     template[row][12][sta_hour_ind + 1:],
+                                     template[row][14][0:end_hour_ind],
+                                     template[row][14][end_hour_ind + 1:])
+    return template
+
 def main():
     input_data = continuous_scanning()
     input_data_fixed = missing_data_processing(input_data)
@@ -136,17 +188,7 @@ def main():
                 # Current value(s) for the key.
                 temp_time_list = input_data_fixed_dict[SO_key][employee_key][workid_key]
 
-                # Detect part of the error cases
-                start_end_error = False if len(temp_time_list) % 2 == 0 else True
-                for i in range(len(temp_time_list)):
-                    if i % 2 == 0:
-                        if temp_time_list[i][0] != "STA":
-                            start_end_error = True
-                            break
-                    else:
-                        if temp_time_list[i][0] != "END":
-                            start_end_error = True
-                            break
+                start_end_error = detect_missing_data(temp_time_list)
 
                 # if any of the data is missing
                 if SO_key == "-" or employee_key == "-" or workid_key == "-" or start_end_error:
@@ -175,13 +217,16 @@ def main():
                 # If no data missing
                 else:
                     SO_rows = where_row(template, 0, SO_key)
-                    row = None
+
+                    row = 0
                     if len(SO_rows) == 0:
                         row = None
                     elif len(SO_rows) == 1:
                         workid_rows = SO_rows[0]
                         if template[workid_rows][17] == "Miss Data":
                             row = None
+                        else:
+                            row = SO_rows[0]
                     else:
                         workid_rows = where_row(template[SO_rows[0]:SO_rows[len(SO_rows)]], 2, workid_key)
                         if len(workid_rows) == 0:
@@ -213,31 +258,14 @@ def main():
                             cost_min_tt += time_correct(temp_time_list[j][4], temp_time_list[j][5],
                                                         temp_time_list[j + 1][4], temp_time_list[j + 1][5])
 
-                            # Compare to see if the start time is the earliest start time.
-                            if template[row][11] == 0:
-                                template[row][11] = temp_date_start
-                                template[row][12] = temp_time_start
-                            if template[row][11] > temp_date_start:
-                                template[row][11] = temp_date_start
-                                template[row][12] = temp_time_start
-                            elif template[row][11] == temp_date_start:
-                                if template[row][12] > temp_time_start:
-                                    template[row][12] = temp_time_start
-
-                            # Compare to see if the end time is the latest start time.
-                            if template[row][13] == 0:
-                                template[row][13] = temp_date_start
-                                template[row][14] = temp_time_start
-                            if template[row][13] < temp_date_end:
-                                template[row][13] = temp_date_end
-                                template[row][14] = temp_time_end
-                            elif template[row][13] == temp_date_end:
-                                if template[row][14] < temp_time_end:
-                                    template[row][14] = temp_time_end
+                            template = update_time(template, row, temp_date_start, temp_time_start, temp_date_end,
+                                                   temp_time_end)
 
                         template[row][16] = (template[row][16] * template[row][10] + cost_min_tt) / (
                                 template[row][10] + 1)
                         template[row][10] += 1
+
+                        template = duration_time(template, row)
 
                     # Does not have the record before.
                     else:
@@ -248,7 +276,6 @@ def main():
                         template[row][10] = 1
                         cost_min_tt = 0
                         for j in range(0, len(temp_time_list), 2):
-
                             temp_date_start = f"{temp_time_list[j][1]}/{temp_time_list[j][2]}/{temp_time_list[j][3]}"
                             temp_time_start = f"{temp_time_list[j][4]}:{temp_time_list[j][5]}"
                             temp_date_end = (f"{temp_time_list[j + 1][1]}/{temp_time_list[j + 1][2]}"
@@ -259,31 +286,37 @@ def main():
                                                         temp_time_list[j + 1][4],
                                                         temp_time_list[j + 1][5])
 
-                            # Compare to see if the start time is the earliest start time.
-                            if template[row][11] == 0:
-                                template[row][11] = temp_date_start
-                                template[row][12] = temp_time_start
-                            elif template[row][11] > temp_date_start:
-                                template[row][11] = temp_date_start
-                                template[row][12] = temp_time_start
-                            elif template[row][11] == temp_date_start:
-                                if template[row][12] > temp_time_start:
-                                    template[row][12] = temp_time_start
-
-                            # Compare to see if the end time is the latest start time.
-                            if template[row][13] == 0:
-                                template[row][13] = temp_date_start
-                                template[row][14] = temp_time_start
-                            if template[row][13] < temp_date_end:
-                                template[row][13] = temp_date_end
-                                template[row][14] = temp_time_end
-                            elif template[row][13] == temp_date_end:
-                                if template[row][14] < temp_time_end:
-                                    template[row][14] = temp_time_end
+                            template = update_time(template, row, temp_date_start, temp_time_start, temp_date_end,
+                                                   temp_time_end)
 
                         template[row][16] = cost_min_tt
+                        template = duration_time(template, row)
 
-    print(template)
+    df_template = pd.DataFrame(template, columns=['Work Order', 'Cell#', 'Task', 'EmployeeID1', 'EmployeeID2',
+                                                  'EmployeeID3', 'EmployeeID4', 'EmployeeID5', 'EmployeeID6',
+                                                  'EmployeeID7', 'Number of Operators', 'Time start date', 'Time start',
+                                                  'Time end date', 'Time end', 'Duration time',
+                                                  'Average time consumed per operator', 'Missed Data'])
+    print(df_template)
+    log_file_name = f'{year}{month}{day}_log.xlsx'
+    df_template.to_excel(log_file_name, index=False)
+
+    # Formatting of the file
+    workbook = load_workbook(log_file_name)
+    worksheet = workbook.active
+
+    for col in worksheet.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            try:
+                max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+        adjusted_width = max_length + 2
+        worksheet.column_dimensions[col_letter].width = adjusted_width
+
+    workbook.save(log_file_name)
 
 
 if __name__ == '__main__':
