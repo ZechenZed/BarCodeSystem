@@ -118,10 +118,9 @@ def main():
     # 0: Work Order#, 1: Cell#, 2: Task#, 3: EmployeeID1#, 4: EmployeeID2#, 5: EmployeeID3#, 6: EmployeeID4#,
     # 7: EmployeeID5#, 8: EmployeeID6#, 9: EmployeeID7#, 10: Number of Operators, 11: Time start date, 12: Time start,
     # 13: Time end date, 14: Time end, 15: Duration time, 16: Average time consumed per operator, 17: Missed Data?
-    sample_line = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     template = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     for ct in range(line_count - 1):
-        template.append(sample_line)
+        template.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     print("Start Data Processing")
 
@@ -152,6 +151,7 @@ def main():
                 # if any of the data is missing
                 if SO_key == "-" or employee_key == "-" or workid_key == "-" or start_end_error:
 
+                    # Write those missing data into new lines
                     for j in range(len(temp_time_list)):
                         row = where_row(template, 10, 0)[0]  # Find the next non-occupied row
 
@@ -193,7 +193,7 @@ def main():
                                 row = workid_rows[0]
                         else:
                             row = None
-                    print(row)
+
                     # Has the record before, we then update it with the new data.
                     if row is not None:
                         # decide the indexing for the new employee
@@ -242,13 +242,12 @@ def main():
                     # Does not have the record before.
                     else:
                         row = where_row(template, 12, 0)[0]
-                        print(template[row][0], row)
                         template[row][0] = SO_key
                         template[row][2] = workid_key
                         template[row][3] = employee_key
                         template[row][10] = 1
                         cost_min_tt = 0
-                        for j in range(0, len(temp_time_list) // 7, 2):
+                        for j in range(0, len(temp_time_list), 2):
 
                             temp_date_start = f"{temp_time_list[j][1]}/{temp_time_list[j][2]}/{temp_time_list[j][3]}"
                             temp_time_start = f"{temp_time_list[j][4]}:{temp_time_list[j][5]}"
