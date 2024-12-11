@@ -16,8 +16,10 @@ year = time.localtime().tm_year
 month = time.localtime().tm_mon
 day = time.localtime().tm_mday
 
-len_scannerID = int(3)
+len_scannerID = int(4)
 len_work_ID = int(len_scannerID + 11)
+len_SO = int(len_scannerID + 4)
+len_employeeID = int(len_scannerID + 5)
 
 
 def time_correct(start_hour, start_min, end_hour, end_min):
@@ -49,7 +51,7 @@ def where_column(temp_list_line, value):
 
 def continuous_scanning():
     # Time
-    log = []
+    log = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 
     print("Please start scanning now.")
     while True:
@@ -59,20 +61,21 @@ def continuous_scanning():
             break
         else:
             info_time = time.localtime()[0:6]
-            info_pack = [info, info_time]
-            log += [info_pack]
+            info_pack = [info, info_time]  # Pack the data with the corresponding time.
+            log[int(info[2:4])] += [info_pack]  # Use the ID prefix from the bar code scanner to sort the input data.
+    log = [item for sublist in log for item in sublist]
     print("Scanning Ended")
     return log
 
 
-def missing_data_processing(data):
+def missing_data_filling(data):
     print("Processing missing data.")
     i = 0
     while i < len(data):
-        if len(data[i][0]) != 7:
+        if len(data[i][0]) != len_SO:
             data.insert(i, ["-", "-"])
         try:
-            if len(data[i + 1][0]) != 8:
+            if len(data[i + 1][0]) != len_employeeID:
                 data.insert(i + 1, ["-", "-"])
         except IndexError:
             data.insert(len(data), ["-", "-"])
@@ -94,16 +97,19 @@ def list_to_dic(input_list):
         temp_sale = input_list[i]
         temp_employee = input_list[i + 1]
         temp_work = input_list[i + 2]
+
+        # Check if we have the valid time stamp to put into the dict.
         if len(temp_work[0]) == len_work_ID:
             temp_work_pack = list(temp_work[1])
-            temp_stat = temp_work[0][3:6]
-            temp_work_pack.insert(0, temp_stat)
-            log_dict[temp_sale[0]][temp_employee[0]][temp_work[0][7:]].append(temp_work_pack)
+            temp_work_pack.insert(0,temp_work[0][4:7])
+            log_dict[temp_sale[0]][temp_employee[0]][temp_work[0][8:]].append(temp_work_pack)
         else:
             log_dict[temp_sale[0]][temp_employee[0]][temp_work[0]].append(temp_work[1])
 
+    # Store the original data into json file for later use.
     with open(f"{year}_{month}_{day}_WorkLog.json", 'w') as json_file:
         json.dump(log_dict, json_file, indent=6, separators=(", ", " : "))
+
     print("Finished with dictionary.")
     return log_dict
 
@@ -149,18 +155,19 @@ def update_time(template, row, temp_date_start, temp_time_start, temp_date_end, 
 
 
 def duration_time(template, row):
-    sta_hour_ind = 1 if template[row][12] % 2 == 0 else 2
-    end_hour_ind = 1 if template[row][14] % 2 == 0 else 2
+    sta_hour_ind = 1 if len(template[row][12]) % 2 == 0 else 2
+    end_hour_ind = 1 if len(template[row][14]) % 2 == 0 else 2
 
-    template[row][15] = time_correct(template[row][12][0:sta_hour_ind],
-                                     template[row][12][sta_hour_ind + 1:],
-                                     template[row][14][0:end_hour_ind],
-                                     template[row][14][end_hour_ind + 1:])
+    template[row][15] = time_correct(int(template[row][12][0:sta_hour_ind]),
+                                     int(template[row][12][sta_hour_ind + 1:]),
+                                     int(template[row][14][0:end_hour_ind]),
+                                     int(template[row][14][end_hour_ind + 1:]))
     return template
+
 
 def main():
     input_data = continuous_scanning()
-    input_data_fixed = missing_data_processing(input_data)
+    input_data_fixed = missing_data_filling(input_data)
     input_data_fixed_dict = list_to_dic(input_data_fixed)
     pprint.pprint(input_data_fixed_dict)
 
@@ -223,12 +230,15 @@ def main():
                         row = None
                     elif len(SO_rows) == 1:
                         workid_rows = SO_rows[0]
-                        if template[workid_rows][17] == "Miss Data":
-                            row = None
+                        if template[workid_rows][2] == workid_key:
+                            if template[workid_rows][17] == "Miss Data":
+                                row = None
+                            else:
+                                row = workid_rows
                         else:
-                            row = SO_rows[0]
+                            row = None
                     else:
-                        workid_rows = where_row(template[SO_rows[0]:SO_rows[len(SO_rows)]], 2, workid_key)
+                        workid_rows = where_row(template[SO_rows[0]:SO_rows[len(SO_rows)-1]], 2, workid_key)
                         if len(workid_rows) == 0:
                             row = None
                         elif len(workid_rows) == 1:
@@ -242,8 +252,10 @@ def main():
                     # Has the record before, we then update it with the new data.
                     if row is not None:
                         # decide the indexing for the new employee
-                        temp_new_employee_ind = where_column(template[row][3:11], 0)
-                        template[row][temp_new_employee_ind + 3] = employee_key
+                        if employee_key not in template[row][3:11]:
+                            temp_new_employee_ind = where_column(template[row][3:11], 0)
+                            template[row][temp_new_employee_ind + 3] = employee_key
+
                         cost_min_tt = 0
 
                         # Go through all the valid time stamp that employee has
