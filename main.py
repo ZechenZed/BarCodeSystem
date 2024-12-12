@@ -1,6 +1,4 @@
 import time
-import tkinter as tk
-from tkinter import simpledialog
 import keyboard
 import sys
 import json
@@ -16,10 +14,9 @@ year = time.localtime().tm_year
 month = time.localtime().tm_mon
 day = time.localtime().tm_mday
 
-len_scannerID = int(4)
-len_work_ID = int(len_scannerID + 11)
-len_SO = int(len_scannerID + 4)
-len_employeeID = int(len_scannerID + 5)
+len_employeeID = int(4)  # Sample Employee ID: 001
+len_work_ID = int(len_employeeID + 11)  #
+len_SO = int(len_employeeID + 4)
 
 
 def time_correct(start_hour, start_min, end_hour, end_min):
@@ -50,19 +47,18 @@ def where_column(temp_list_line, value):
 
 
 def continuous_scanning():
-    # Time
     log = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
-
     print("Please start scanning now.")
+
     while True:
         info = input()
         if "End of the day." in info:
             print("Enjoy the rest of the day!")
             break
         else:
-            info_time = time.localtime()[0:6]
+            info_time = time.localtime()[3:5]
             info_pack = [info, info_time]  # Pack the data with the corresponding time.
-            log[int(info[2:4])] += [info_pack]  # Use the ID prefix from the bar code scanner to sort the input data.
+            log[int(info[0:3])] += [info_pack]  # Use the ID prefix from the bar code scanner to sort the input data.
     log = [item for sublist in log for item in sublist]
     print("Scanning Ended")
     return log
@@ -71,6 +67,9 @@ def continuous_scanning():
 def missing_data_filling(data):
     print("Processing missing data.")
     i = 0
+    if len(data[0][3:]) != 4:
+        data.insert(0, ['Miss Unit Number', '-'])
+
     while i < len(data):
         if len(data[i][0]) != len_SO:
             data.insert(i, ["-", "-"])
@@ -101,7 +100,7 @@ def list_to_dic(input_list):
         # Check if we have the valid time stamp to put into the dict.
         if len(temp_work[0]) == len_work_ID:
             temp_work_pack = list(temp_work[1])
-            temp_work_pack.insert(0,temp_work[0][4:7])
+            temp_work_pack.insert(0, temp_work[0][4:7])
             log_dict[temp_sale[0]][temp_employee[0]][temp_work[0][8:]].append(temp_work_pack)
         else:
             log_dict[temp_sale[0]][temp_employee[0]][temp_work[0]].append(temp_work[1])
@@ -238,7 +237,7 @@ def main():
                         else:
                             row = None
                     else:
-                        workid_rows = where_row(template[SO_rows[0]:SO_rows[len(SO_rows)-1]], 2, workid_key)
+                        workid_rows = where_row(template[SO_rows[0]:SO_rows[len(SO_rows) - 1]], 2, workid_key)
                         if len(workid_rows) == 0:
                             row = None
                         elif len(workid_rows) == 1:
