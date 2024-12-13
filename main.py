@@ -55,6 +55,8 @@ def continuous_scanning():
         if "End of the day." in info:
             print("Enjoy the rest of the day!")
             break
+        # timer for 90 min tempo. --Skylar
+
         else:
             info_time = time.localtime()[3:5]
             info_pack = [info, info_time]  # Pack the data with the corresponding time.
@@ -64,12 +66,14 @@ def continuous_scanning():
     return log
 
 
-def missing_data_filling(data):
+def data_processing(data):
     print("Processing missing data.")
     i = 0
     if len(data[0][3:]) != 4:
         data.insert(0, ['Miss Unit Number', '-'])
 
+    # Corner case 1: Have STA No END, Have STA for next job already --> Trigger warning to PM / VPM.
+    # Corner case 2: No STA Have END, 1) index 0's job use the time for scanning the PO, 2) Use
     while i < len(data):
         if len(data[i][0]) != len_SO:
             data.insert(i, ["-", "-"])
@@ -166,9 +170,9 @@ def duration_time(template, row):
 
 def main():
     input_data = continuous_scanning()
-    input_data_fixed = missing_data_filling(input_data)
+    input_data_fixed = data_processing(input_data)
     input_data_fixed_dict = list_to_dic(input_data_fixed)
-    pprint.pprint(input_data_fixed_dict)
+    # pprint.pprint(input_data_fixed_dict)
 
     # Create the structure for later transformation to pandas data structure
     line_count = len(input_data_fixed) // 3
@@ -176,6 +180,7 @@ def main():
     # 0: Work Order#, 1: Cell#, 2: Task#, 3: EmployeeID1#, 4: EmployeeID2#, 5: EmployeeID3#, 6: EmployeeID4#,
     # 7: EmployeeID5#, 8: EmployeeID6#, 9: EmployeeID7#, 10: Number of Operators, 11: Time start date, 12: Time start,
     # 13: Time end date, 14: Time end, 15: Duration time, 16: Average time consumed per operator, 17: Missed Data?
+
     template = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     for ct in range(line_count - 1):
         template.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
