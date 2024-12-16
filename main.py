@@ -15,8 +15,8 @@ month = time.localtime().tm_mon
 day = time.localtime().tm_mday
 
 len_employeeID = int(4)  # Sample Employee ID: 001
-len_work_ID = int(len_employeeID + 11)  #
-len_SO = int(len_employeeID + 4)
+len_work_ID = int(len_employeeID + 11)  # Hard coded to 15 for len_employeeID == 15
+len_SO = int(len_employeeID + 4)   # Hard Coded to 8 for len_employeeID == 4
 
 
 def time_correct(start_hour, start_min, end_hour, end_min):
@@ -61,33 +61,72 @@ def continuous_scanning():
             info_time = time.localtime()[3:5]
             info_pack = [info, info_time]  # Pack the data with the corresponding time.
             log[int(info[0:3])] += [info_pack]  # Use the ID prefix from the bar code scanner to sort the input data.
+
+    # Flatten the log list
     log = [item for sublist in log for item in sublist]
+
     print("Scanning Ended")
     return log
 
 
 def data_processing(data):
     print("Processing missing data.")
+    # pointer index
     i = 0
-    if len(data[0][3:]) != 4:
-        data.insert(0, ['Miss Unit Number', '-'])
+
+    # if the first item in dats does not have a len of 8, replace the item with a 1D list
+    if len(data[i][3:]) != 4:
+        data.insert(0, ['Missing Unit Number', '-'])
+
+    # loop through every STA-END tuple in the list
+    while i < len(data):
+        # if the second item in data does not start with STA, replace the item with a 1D list
+        if len(data[1+1][4:6]) != "STA":
+            # if it starts with END, 1) use the time for scanning the unit number, 2)
+            if len(data[i + 2][4:6]) != "STA":
+                # TODO
+                pass
+            else:
+                data.insert(1, ['Missing Start Time', '-'])
+
+        # if the third item in data does not start with END, replace the item with a 1D list
+        if len(data[i+2][4:6]) != "END":
+            # if it starts with STA, Trigger warning to PM/ VPM
+            if len(data[i + 2][4:6]) != "STA":
+                # TODO
+                pass
+            else:
+                data.insert(2, ['Missing End Time', '-'])
+
+        # increment pointer index
+        i += 2
+
+    print('Missing data fixed.')
+    return data
 
     # Corner case 1: Have STA No END, Have STA for next job already --> Trigger warning to PM / VPM.
     # Corner case 2: No STA Have END, 1) index 0's job use the time for scanning the PO, 2) Use
+
+    # loop through every item in the data list
     while i < len(data):
+        # if the first item in data does not have a len of 8, replace the entire item with a 1D list
         if len(data[i][0]) != len_SO:
             data.insert(i, ["-", "-"])
         try:
+            # if the second item in data does not have a len of 4, replace the entire item with a 1D list
             if len(data[i + 1][0]) != len_employeeID:
                 data.insert(i + 1, ["-", "-"])
         except IndexError:
             data.insert(len(data), ["-", "-"])
         try:
+            # if the third item in data does not have a len of 15, replace the entire item with a 1D list
             if len(data[i + 2][0]) != len_work_ID:
                 data.insert(i + 2, ["-", "-"])
         except IndexError:
             data.insert(len(data), ["-", "-"])
             break
+
+        # increment pointer index
         i += 3
     print('Missing data fixed.')
     return data
