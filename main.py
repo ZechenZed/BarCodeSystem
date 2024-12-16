@@ -14,9 +14,9 @@ year = time.localtime().tm_year
 month = time.localtime().tm_mon
 day = time.localtime().tm_mday
 
-len_employeeID = int(4)  # Sample Employee ID: 001
-len_work_ID = int(len_employeeID + 11)  # Hard coded to 15 for len_employeeID == 15
-len_SO = int(len_employeeID + 4)   # Hard Coded to 8 for len_employeeID == 4
+len_employeeID = int(3)  # Sample Employee ID: 001
+len_work_ID = int(len_employeeID + 11)  # Hard coded to 15 for len_employeeID == 14
+len_SO = int(len_employeeID + 4)  # Hard Coded to 7 for len_employeeID == 3
 
 
 def time_correct(start_hour, start_min, end_hour, end_min):
@@ -69,84 +69,120 @@ def continuous_scanning():
     return log
 
 
-def data_processing(data):
+def data_processing(log):
     print("Processing missing data.")
     # pointer index
     i = 0
 
     # if the first item in dats does not have a len of 8, replace the item with a 1D list
-    if len(data[i][3:]) != 4:
-        data.insert(0, ['Missing Unit Number', '-'])
+    if len(log[i][0]) != 7:
+        log.insert(0, ['Missing Unit Number', '-'])
+
+    # Move to the index 1
+    i += 1
 
     # loop through every STA-END tuple in the list
-    while i < len(data):
-        # if the second item in data does not start with STA, replace the item with a 1D list
-        if len(data[1+1][4:6]) != "STA":
-            # if it starts with END, 1) use the time for scanning the unit number, 2)
-            if len(data[i + 2][4:6]) != "STA":
-                # TODO
-                pass
-            else:
-                data.insert(1, ['Missing Start Time', '-'])
+    while i < len(log):
+        # if the second item in log does not start with STA, replace the item with a 1D list
+        if "STA" not in log[i][0]:
+            log.insert(i, ['Missing Start Time', '-'])
 
-        # if the third item in data does not start with END, replace the item with a 1D list
-        if len(data[i+2][4:6]) != "END":
-            # if it starts with STA, Trigger warning to PM/ VPM
-            if len(data[i + 2][4:6]) != "STA":
-                # TODO
-                pass
-            else:
-                data.insert(2, ['Missing End Time', '-'])
+        # # if the second item in log does not start with STA, replace the item with a 1D list
+        # if "STA" not in log[i+1]:
+        #     # if it starts with END, 1) use the time for scanning the unit number, 2)
+        #     if len(log[i + 2][4:6]) != "STA":
+        #         # TODO
+        #         pass
+        #     else:
+        #         log.insert(1, ['Missing Start Time', '-'])
+
+        # if the third item in log does not start with END, replace the item with a 1D list
+        try:  # Use try-except to handle the IndexError but still add the placeholder for the missing data
+            if "END" not in log[i + 1][0]:
+                log.insert(i + 1, ['Missing End Time', '-'])
+        except IndexError:
+            log.insert(len(log), ['Missing End Time', '-'])
+
+        # # if the third item in log does not start with END, replace the item with a 1D list
+        # if len(log[i+2][4:6]) != "END":
+        #     # if it starts with STA, Trigger warning to PM/ VPM
+        #     if len(log[i + 2][4:6]) != "STA":
+        #         # TODO
+        #         pass
+        #     else:
+        #         log.insert(2, ['Missing End Time', '-'])
 
         # increment pointer index
         i += 2
 
-    print('Missing data fixed.')
-    return data
+    print('Missing log fixed.')
+    return log
 
-    # Corner case 1: Have STA No END, Have STA for next job already --> Trigger warning to PM / VPM.
-    # Corner case 2: No STA Have END, 1) index 0's job use the time for scanning the PO, 2) Use
-
-    # loop through every item in the data list
-    while i < len(data):
-        # if the first item in data does not have a len of 8, replace the entire item with a 1D list
-        if len(data[i][0]) != len_SO:
-            data.insert(i, ["-", "-"])
-        try:
-            # if the second item in data does not have a len of 4, replace the entire item with a 1D list
-            if len(data[i + 1][0]) != len_employeeID:
-                data.insert(i + 1, ["-", "-"])
-        except IndexError:
-            data.insert(len(data), ["-", "-"])
-        try:
-            # if the third item in data does not have a len of 15, replace the entire item with a 1D list
-            if len(data[i + 2][0]) != len_work_ID:
-                data.insert(i + 2, ["-", "-"])
-        except IndexError:
-            data.insert(len(data), ["-", "-"])
-            break
-
-        # increment pointer index
-        i += 3
-    print('Missing data fixed.')
-    return data
+    # # Corner case 1: Have STA No END, Have STA for next job already --> Trigger warning to PM / VPM.
+    # # Corner case 2: No STA Have END, 1) index 0's job use the time for scanning the PO, 2) Use
+    #
+    # # loop through every item in the log list
+    # while i < len(log):
+    #     # if the first item in log does not have a len of 8, replace the entire item with a 1D list
+    #     if len(log[i][0]) != len_SO:
+    #         log.insert(i, ["-", "-"])
+    #     try:
+    #         # if the second item in log does not have a len of 4, replace the entire item with a 1D list
+    #         if len(log[i + 1][0]) != len_employeeID:
+    #             log.insert(i + 1, ["-", "-"])
+    #     except IndexError:
+    #         log.insert(len(log), ["-", "-"])
+    #     try:
+    #         # if the third item in log does not have a len of 15, replace the entire item with a 1D list
+    #         if len(log[i + 2][0]) != len_work_ID:
+    #             log.insert(i + 2, ["-", "-"])
+    #     except IndexError:
+    #         log.insert(len(log), ["-", "-"])
+    #         break
+    #
+    #     # increment pointer index
+    #     i += 3
+    # print('Missing log fixed.')
+    # return log
 
 
 def list_to_dic(input_list):
     print('Start to put in dictionary')
+    # Create a dictionary with defaultdict to handle some null error.
     log_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    for i in range(0, len(input_list), 3):
-        temp_sale = input_list[i]
-        temp_employee = input_list[i + 1]
-        temp_work = input_list[i + 2]
 
-        # Check if we have the valid time stamp to put into the dict.
-        if len(temp_work[0]) == len_work_ID:
-            temp_work_pack = list(temp_work[1])
-            temp_work_pack.insert(0, temp_work[0][4:7])
-            log_dict[temp_sale[0]][temp_employee[0]][temp_work[0][8:]].append(temp_work_pack)
+    # First index of the input list should be the SO
+    temp_SO = input_list[0][0]
+
+    # Loop through the rest of the input list
+    for i in range(1, len(input_list), 2):
+        # Choose employee id & job id based on the STA / END
+        if input_list[i][0] != "-":
+            temp_employee = input_list[i][0][0:3]  # 001
+            temp_work = input_list[i][0][8:]  # eg.  EMM0029
         else:
-            log_dict[temp_sale[0]][temp_employee[0]][temp_work[0]].append(temp_work[1])
+            temp_employee = input_list[i+1][0][0:3]
+            temp_work = input_list[i+1][0][8:]
+
+        # STA work pack
+        temp_work_STA_pack = list(input_list[i][1])  # Start time
+        temp_work_STA_pack.insert(0, "STA")
+
+        # End Work Pack
+        temp_work_END_pack = list(input_list[i+1][1])  # End time
+        temp_work_END_pack.insert(0, "END")
+
+        log_dict[temp_SO][temp_employee][temp_work].append(temp_work_STA_pack)
+        log_dict[temp_SO][temp_employee][temp_work].append(temp_work_END_pack)
+
+
+        # # Check if we have the valid time stamp to put into the dict.
+        # if len(temp_work[0]) == len_work_ID:
+        #     temp_work_pack = list(temp_work[1])
+        #     temp_work_pack.insert(0, temp_work[0][4:7])
+        #     log_dict[temp_sale[0]][temp_employee[0]][temp_work[0][8:]].append(temp_work_pack)
+        # else:
+        #     log_dict[temp_sale[0]][temp_employee[0]][temp_work[0]].append(temp_work[1])
 
     # Store the original data into json file for later use.
     with open(f"{year}_{month}_{day}_WorkLog.json", 'w') as json_file:
@@ -159,15 +195,13 @@ def list_to_dic(input_list):
 def detect_missing_data(current_values):
     # Detect part of the error cases
     start_end_error = False if len(current_values) % 2 == 0 else True
+
+    # loop through all the values
     for i in range(len(current_values)):
-        if i % 2 == 0:
-            if current_values[i][0] != "STA":
-                start_end_error = True
-                break
-        else:
-            if current_values[i][0] != "END":
-                start_end_error = True
-                break
+        if current_values[i][1] == "-":
+            start_end_error = True
+            break
+
     return start_end_error
 
 
@@ -207,14 +241,7 @@ def duration_time(template, row):
     return template
 
 
-def main():
-    input_data = continuous_scanning()
-    input_data_fixed = data_processing(input_data)
-    input_data_fixed_dict = list_to_dic(input_data_fixed)
-    # pprint.pprint(input_data_fixed_dict)
-
-    # Create the structure for later transformation to pandas data structure
-    line_count = len(input_data_fixed) // 3
+def writing_excel(input_data_fixed_dict, line_count):
     # Create the data structure as following:
     # 0: Work Order#, 1: Cell#, 2: Task#, 3: EmployeeID1#, 4: EmployeeID2#, 5: EmployeeID3#, 6: EmployeeID4#,
     # 7: EmployeeID5#, 8: EmployeeID6#, 9: EmployeeID7#, 10: Number of Operators, 11: Time start date, 12: Time start,
@@ -253,14 +280,15 @@ def main():
                         template[row][3] = employee_key
                         template[row][10] = 1
 
+                        # Current work pack: Either start or end
                         temp_time = temp_time_list[j]
-                        if temp_time != "-":
+                        if temp_time[1] != "-":
                             if "END" in temp_time[0]:
-                                template[row][13] = f"{temp_time[1]}/{temp_time[2]}/{temp_time[3]}"
-                                template[row][14] = f"{temp_time[4]}:{temp_time[5]}"
+                                template[row][13] = f"{year}/{month}/{day}"
+                                template[row][14] = f"{temp_time[1]}:{temp_time[2]}"
                             else:
-                                template[row][11] = f"{temp_time[1]}/{temp_time[2]}/{temp_time[3]}"
-                                template[row][12] = f"{temp_time[4]}:{temp_time[5]}"
+                                template[row][11] = f"{year}/{month}/{day}"
+                                template[row][12] = f"{temp_time[1]}:{temp_time[2]}"
 
                         template[row][17] = "Miss Data"
 
@@ -303,15 +331,14 @@ def main():
 
                         # Go through all the valid time stamp that employee has
                         for j in range(0, len(temp_time_list), 2):
-                            temp_date_start = f"{temp_time_list[j][1]}/{temp_time_list[j][2]}/{temp_time_list[j][3]}"
-                            temp_time_start = f"{temp_time_list[j][4]}:{temp_time_list[j][5]}"
-                            temp_date_end = (f"{temp_time_list[j + 1][1]}/{temp_time_list[j + 1][2]}"
-                                             f"/{temp_time_list[j + 1][3]}")
-                            temp_time_end = f"{temp_time_list[j + 1][4]}:{temp_time_list[j + 1][5]}"
+                            temp_date_start = f"{year}/{month}/{day}"
+                            temp_time_start = f"{temp_time_list[j][1]}:{temp_time_list[j][2]}"
+                            temp_date_end = f"{year}/{month}/{day}"
+                            temp_time_end = f"{temp_time_list[j + 1][1]}:{temp_time_list[j + 1][2]}"
 
                             # Cost time in min
-                            cost_min_tt += time_correct(temp_time_list[j][4], temp_time_list[j][5],
-                                                        temp_time_list[j + 1][4], temp_time_list[j + 1][5])
+                            cost_min_tt += time_correct(temp_time_list[j][1], temp_time_list[j][2],
+                                                        temp_time_list[j + 1][1], temp_time_list[j + 1][2])
 
                             template = update_time(template, row, temp_date_start, temp_time_start, temp_date_end,
                                                    temp_time_end)
@@ -331,15 +358,14 @@ def main():
                         template[row][10] = 1
                         cost_min_tt = 0
                         for j in range(0, len(temp_time_list), 2):
-                            temp_date_start = f"{temp_time_list[j][1]}/{temp_time_list[j][2]}/{temp_time_list[j][3]}"
-                            temp_time_start = f"{temp_time_list[j][4]}:{temp_time_list[j][5]}"
-                            temp_date_end = (f"{temp_time_list[j + 1][1]}/{temp_time_list[j + 1][2]}"
-                                             f"/{temp_time_list[j + 1][3]}")
-                            temp_time_end = f"{temp_time_list[j + 1][4]}:{temp_time_list[j + 1][5]}"
+                            temp_date_start = f"{year}/{month}/{day}"
+                            temp_time_start = f"{temp_time_list[j][1]}:{temp_time_list[j][2]}"
+                            temp_date_end = f"{year}/{month}/{day}"
+                            temp_time_end = f"{temp_time_list[j + 1][1]}:{temp_time_list[j + 1][2]}"
 
-                            cost_min_tt += time_correct(temp_time_list[j][4], temp_time_list[j][5],
-                                                        temp_time_list[j + 1][4],
-                                                        temp_time_list[j + 1][5])
+                            cost_min_tt += time_correct(temp_time_list[j][1], temp_time_list[j][2],
+                                                        temp_time_list[j + 1][1],
+                                                        temp_time_list[j + 1][2])
 
                             template = update_time(template, row, temp_date_start, temp_time_start, temp_date_end,
                                                    temp_time_end)
@@ -372,6 +398,14 @@ def main():
         worksheet.column_dimensions[col_letter].width = adjusted_width
 
     workbook.save(log_file_name)
+
+
+def main():
+    input_data = continuous_scanning()
+    input_data_fixed = data_processing(input_data)
+    input_data_fixed_dict = list_to_dic(input_data_fixed)
+    # pprint.pprint(input_data_fixed_dict)
+    writing_excel(input_data_fixed_dict, (len(input_data_fixed)-1))
 
 
 if __name__ == '__main__':
