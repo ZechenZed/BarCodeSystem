@@ -19,14 +19,14 @@ len_work_ID = int(len_employeeID + 11)  # Hard coded to 15 for len_employeeID ==
 len_SO = int(len_employeeID + 4)  # Hard Coded to 7 for len_employeeID == 3
 
 
-def time_correct(start_hour, start_min, end_hour, end_min):
+def time_cost(start_hour, start_min, end_hour, end_min):
     cost_hour = end_hour - start_hour
     cost_min = end_min - start_min
+    # Reduce one hour if the mini
     if cost_min < 0:
         cost_min = 60 - abs(cost_min)
         cost_hour -= 1
-    if cost_hour < 0:
-        cost_hour = 24 - abs(cost_hour)
+
     return cost_hour * 60 + cost_min
 
 
@@ -207,9 +207,10 @@ def detect_missing_data(current_values):
 
 def update_time(template, row, temp_date_start, temp_time_start, temp_date_end, temp_time_end):
     # Compare to see if the start time is the earliest start time.
-    if template[row][11] == 0:
+    if template[row][11] == 0: # update the time if previously there is no time data
         template[row][11] = temp_date_start
         template[row][12] = temp_time_start
+    # Compare to check if we need to update the start time of the task
     if template[row][11] > temp_date_start:
         template[row][11] = temp_date_start
         template[row][12] = temp_time_start
@@ -221,6 +222,8 @@ def update_time(template, row, temp_date_start, temp_time_start, temp_date_end, 
     if template[row][13] == 0:
         template[row][13] = temp_date_start
         template[row][14] = temp_time_start
+
+    # Compare to check if we need to update the end time of the task
     if template[row][13] < temp_date_end:
         template[row][13] = temp_date_end
         template[row][14] = temp_time_end
@@ -234,7 +237,7 @@ def duration_time(template, row):
     sta_hour_ind = 1 if len(template[row][12]) % 2 == 0 else 2
     end_hour_ind = 1 if len(template[row][14]) % 2 == 0 else 2
 
-    template[row][15] = time_correct(int(template[row][12][0:sta_hour_ind]),
+    template[row][15] = time_cost(int(template[row][12][0:sta_hour_ind]),
                                      int(template[row][12][sta_hour_ind + 1:]),
                                      int(template[row][14][0:end_hour_ind]),
                                      int(template[row][14][end_hour_ind + 1:]))
@@ -337,7 +340,7 @@ def writing_excel(input_data_fixed_dict, line_count):
                             temp_time_end = f"{temp_time_list[j + 1][1]}:{temp_time_list[j + 1][2]}"
 
                             # Cost time in min
-                            cost_min_tt += time_correct(temp_time_list[j][1], temp_time_list[j][2],
+                            cost_min_tt += time_cost(temp_time_list[j][1], temp_time_list[j][2],
                                                         temp_time_list[j + 1][1], temp_time_list[j + 1][2])
 
                             template = update_time(template, row, temp_date_start, temp_time_start, temp_date_end,
@@ -363,7 +366,7 @@ def writing_excel(input_data_fixed_dict, line_count):
                             temp_date_end = f"{year}/{month}/{day}"
                             temp_time_end = f"{temp_time_list[j + 1][1]}:{temp_time_list[j + 1][2]}"
 
-                            cost_min_tt += time_correct(temp_time_list[j][1], temp_time_list[j][2],
+                            cost_min_tt += time_cost(temp_time_list[j][1], temp_time_list[j][2],
                                                         temp_time_list[j + 1][1],
                                                         temp_time_list[j + 1][2])
 
