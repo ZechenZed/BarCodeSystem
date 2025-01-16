@@ -159,10 +159,10 @@ def list_to_dic(input_list):
         # Choose employee id & job id based on the STA / END
         if input_list[i][0] != "-":
             temp_employee = input_list[i][0][0:3]  # 001
-            temp_work = input_list[i][0][8:]  # eg.  EMM0029
+            temp_work = input_list[i][0][7:]  # eg.  EMM0029
         else:
             temp_employee = input_list[i+1][0][0:3]
-            temp_work = input_list[i+1][0][8:]
+            temp_work = input_list[i+1][0][7:]
 
         # STA work pack
         temp_work_STA_pack = list(input_list[i][1])  # Start time
@@ -376,7 +376,7 @@ def writing_excel(input_data_fixed_dict, line_count):
                         template[row][16] = cost_min_tt
                         template = duration_time(template, row)
 
-    df_template = pd.DataFrame(template, columns=['Work Order', 'Cell#', 'Task', 'EmployeeID1', 'EmployeeID2',
+    df_template = pd.DataFrame(template, columns=['Sale Order', 'Cell#', 'Task', 'EmployeeID1', 'EmployeeID2',
                                                   'EmployeeID3', 'EmployeeID4', 'EmployeeID5', 'EmployeeID6',
                                                   'EmployeeID7', 'Number of Operators', 'Time start date', 'Time start',
                                                   'Time end date', 'Time end', 'Duration time',
